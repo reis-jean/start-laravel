@@ -1,0 +1,688 @@
+Laravel (version 7.0.0)	
+Criar o projeto: 
+	composer create-project --prefer-dist laravel/laravel nomedoprojeto "7.0.0"
+	Navegue até o projeto: 
+	cd nomedoprojeto
+Execute o server: 
+	php -S localhost:8080
+ROUTES
+	-> Há um diretorio ROUTES, com os diles "api.php", "channels.php", "console.php", "web.php"	
+	-> o arquivo "web.php", é usado para trabalhar rotas no velho estilo web, processa a pagina no lado do back-end, e servindo resquisições, (Cookies e Session). 
+	-> O arquivo "api.php", é usado para servir as rotas de uma API. 
+	-> O "channels.php" serve para definição de routes de comunicação "broud casting", tipo de recurso usado na comunicação em tempo real, (atualiza no servidor, atualiza no front-end)
+	-> O "Console.php" serve para criação de comandos personalizados apartir do ARtisan. 
+
+CONTROLLERS:
+	-> Atraves de Rotas executam uma ação. 
+	-> Os controllers em Laravel são responsaveis por receber solictações HTTP, Processar dados, Interafir com os modelos e apresentar as respostas adequadas, permitindo assim uam estrutura organizada e eficiente para a construção de aplicações web
+
+VIEWS: 
+	-> EXISTE 2 FORMAS DE REQUISIÇÕES: 
+		-> Tradicional que é basiada na construção de views processadas no lado do servidor.
+		-> E a moderna que é basiada em coneções destintas do front-end e back por conexão da API. 
+
+Manipulando routes
+	no arquivo \routes\web.php é onde difinos nossas routes da seguinte forma: 
+		
+		// Route::get('/', function () {
+		//     return "Olá Mundo";
+		// });
+	
+	enviando dados pela URL (GET)
+		Verbos HTTP:
+			// Verbos http
+			// get
+			// Route::get{$uri, $functionCallback};
+
+			// post 
+			// put path
+			// delete
+			// options
+	
+		// Route::get('/contato/{nome}/{y}', function(string $nome, $categoria){
+		//     echo "estamos aqui $nome  $categoria";
+		// });
+		
+	Para tornar os parametros opcional, basta colocar o "?" no final da variavel GET: 
+		É necessario sempre deixar a variavel opcional por ultimo na url
+			// Route::get('/contato/{nome}/{id}/{categoria?}', 
+			// function(
+			//     string $nome, $categoria = 'categoria não informada', int $id = 1
+			//     ){
+			//     echo "estamos aqui $nome - $categoria - $id";
+			// })
+		//nome -> dado obrigatorio
+		//categoria -> opcional
+		// obrigatorio ser um dado int
+		//Ao passar o metodo where é possivel passar expressões regulares para 
+		//verificar os parametros para atender a determinada posição:
+			// Route::get('/contato/{nome}/{categoria?}/{id}', 
+			// function(
+			//     string $nome, $categoria = 'categoria não informada', int $id = 1
+			//     ){
+			//     echo "estamos aqui $nome - $categoria - $id";
+
+			// })->where('id', '[0-9]+')->where('nome', '[A-Za-z]+');
+		
+					
+		// Agrupando rotas
+		// agora a routes tem o "/app" antes das routes
+		
+		// Route::get('/login', function(){ return 'Login';});
+		// Route::get('/clientes', function(){ return 'Clientes';});
+		// Route::get('/fornecedores', function(){ return 'Fornecedores'+;});
+		// Route::get('/produtos', function(){ return 'Produtos';});
+		Route::prefix('/app')->group(function(){
+			//Passando o metodo ->name para renomeiar a routes
+			//A renomeiação serve para que caso a rota mude o laravel continua levando em consideracao o novo nome
+			// é necessario passar o metodo route no "Href"
+			Route::get('/clientes', function(){ return 'Clientes';})->name('app.clientes');
+			Route::get('/fornecedores', function(){ return 'Fornecedores';})->name('app.fornecedores');
+			Route::get('/produtos', function(){ return 'Produtos';})->name('app.produtos');
+
+		});
+
+					
+		//redirecionamento de rotas
+			//para redirecionar a rota2 para a rota1 
+				Route::get('/rota1', function(){
+					echo 'Rota 1';
+				})->name('site.rota1');
+
+			
+				// Route::redirect('/rota2', '/rota1' );
+				//ou: 
+				// Route::get('/rota2', function(){
+				//     return redirect()->route('site.rota1');
+				// })->name('site.rota1'); 
+
+		// rota de contigencia (pagina de error, caso não encontrei a rota certa);
+			route::fallback(function(){
+				echo 'A rota acessada não existe. <a href="'.route('site.index').'">Clique aqui para voltar a pagina principal</a> ';
+			});
+			
+	//passando dados para o controller
+		Route::get('/teste/{p1}/{p2}', [\App\Http\Controllers\TesteController::class, 'teste'])->name('teste'); 
+			// para criar o controller deve executar o seguinte artisan: 
+			//php artisan make:controller TesteController
+			// na verssão que estou usando "8" funcionou passando o caminho do controller
+			//Depois em App\http\controllers\
+			// Ficará o seu controller e receberá os dados na function já descrita(nesse caso Teste);
+	
+	//Passando os dados da controller para a views
+		// array associativo como parametro da view
+		//Usa-se o "site.teste" para especificar o arquivo na pasta site (deve-se criar na pasta resources/site o arquivo view)
+
+		// return view('site.teste', ['x' => $ps1, 'y' => $ps2]);
+		//Por convensão é ideal que indices dos arrays sejam os mesmos nomes que das variaveis
+		//  return view('site.teste', ['ps1' => $ps1, 'ps2' => $ps2]);
+
+		//usando o metodo Compact
+		//return view('site.teste', compact('ps1', 'ps2'));
+
+		// usando o metodo with()
+		return view('site.teste')->with('ps1', $ps1)->with('ps2', $ps2);
+
+		//Na view vocÊ deve descrever as variaveis passadas pela controller com "{{}}"
+			p1 = {{$ps1}}
+			</br>
+			p2 = {{$ps2}}
+
+		//Para inmprimir um Array na blade é necessario usar: @dd($ps1)
+
+
+		//o Blade é o motor de renderização de views
+		//o blade usa uma programação de html inchuto e clara
+		//usa o recurso de herança de templates, possibilita que views extendam e modifica ou incluam outras views.
+	Comentarios na view com Blade
+		{{--Isso é um comentario--}}
+
+		{{'Sintase para inmprimir uma variavel na view '}}
+		<hr/>
+		<?= 'Sintase para inmprimir uma variavel na view' ?>
+		@php
+			//isso é um comentario no bloco php 
+
+			/** isso é para comentario de multiplas linhas dentro do bloco PHP */
+
+		@endphp
+
+		No blade não se usa p ";" para encerrar comandos
+
+		Estrutura de if e else no Blade
+			@if(count($fornecedores) > 0 && count($fornecedores)> 10)
+				<h3> Existem Alguns fornecedores Cadastrasdos</h3>
+			@elseif(count($fornecedores)> 10)
+				<h3> Existem Varios fornecedores Cadastrasdos</h3>
+			@else
+				<h3> Ainda não existem Fornecedores Cadastrasdos
+			@endif
+
+						
+			@unless($fornecedores[0]['status'] == 'S') <!-- Executa se o retorno da condição for False-->
+				Fornecedor Inativo
+			@endunless
+
+
+			//usando o Isset se a variavel $fornecedores existir ele entra no bloco de codigo, caso não, descarta o processo do codigo
+
+				@isset($fornecedores)
+
+					Fornecedor: {{ $fornecedores[1]['nome'] }}
+					<br/>
+					Status: {{ $fornecedores[1]['status'] }}
+					<br/>
+					@isset($fornecedores[1])
+						Cnpj: {{$fornecedores[1]['cnpj']}}
+					@endisset
+				@endisset
+
+			// usando o empty é utilizado para testar se a variavel possui valor,
+			// Retorna true se variavel estivar vazia 
+			são considerados vazios '', 0, 0.0, '0', null, false, 
+			array() ou se a variavel foi apenas declarada
+			// o isset observa se a variavel existe, já o empty verificar se ha valor na variavel
+
+			 @isset($fornecedores[1])
+				Cnpj: {{$fornecedores[1]['cnpj']}}
+				@empty($fornecedores[1]['cnpj'])
+					--- vazio 
+				@endempty
+			@endisset
+
+			Operador ternario
+				isset($fornecedores[0]['cnpj']) ? 'CNPJ informado' : 'Cnpj não informado';
+
+				se houver cnpj nesse Fornecedor infome a mensagem "CNPJ Informado" caso não "CNPJ não informado";
+			
+			 Cnpj: {{$fornecedores[1]['cnpj']?? 'Dado não preenchido'}}
+				{{-- 
+				$variavel testada não estiver definida
+					ou se $variavel possuir valor null
+					imprime "Dado não preenchido"
+					--}}
+		Usando a estruta de switch
+			@switch($fornecedores[1]['ddd'])
+				@case (11)
+					São paulo - sp
+					@break
+				@case('32')
+					Juiz de fora - Mg
+					@break
+				@case('85')
+					Fortaleza - CE
+					@break
+				@default
+			@endswitch 
+		Estrutura de repetição: 
+			com o @For
+				@for($i = 0; $i <10; $i++)
+					{{$i}}
+					<br>
+				@endFor
+
+			com while: 
+				@php $i = 0 @endphp
+				@while(isset($fornecedores[$i]))
+					Fornecedor: {{ $fornecedores[$i]['nome'] }}
+					<br/>
+					Status: {{ $fornecedores[$i]['status'] }}
+					<br/>
+					Cnpj: {{$fornecedores[$i]['cnpj']}}
+					<br/>
+					Telefone: {{$fornecedores[$i]['ddd']}} {{$fornecedores[1]['telefone']}}
+					<hr>
+					@php $i++  @endphp
+				@endwhile
+				//é necessario abrir o php para declarar as varaveis
+
+			com o foreach
+				@foreach ( $fornecedores as $indice => $fornecedor)
+					Fornecedor: {{ $fornecedor['nome'] }}
+					<br/>
+					Status: {{ $fornecedor['status'] }}
+					<br/>
+					Cnpj: {{$fornecedor['cnpj']}}
+					<br/>
+					Telefone: {{$fornecedor['ddd']}} {{$fornecedor['telefone']}}
+					<hr>
+				@endforeach
+			Com o foreach e o For é possivel trazer a interação da estrutura: 
+				iteracao atual: {{$loop->iteration}}
+				Além tbm de verificar o primeiro ou o ultimo loop da repetiçao: 
+					 @if($loop->first)
+						Primeira interação do loop
+					@endif
+					@if($loop->last)
+						Primeira interação do loop
+					@endif
+					@if($loop->last)
+						Primeira interação do loop
+						<br>
+						total de registros: {{$loop->count}}
+					@endif
+
+					Caso seja necessario a impresão dos codigo na pagina basta colocar um "@" o blade vai imprimir na pagina 
+						Fornecedor: @{{ $fornecedor['nome'] }}
+						<br/>
+						Status: @{{ $fornecedor['status'] }}
+						<br/>
+						Cnpj: @{{$fornecedor['cnpj']}}
+						<br/>
+						Telefone: @{{$fornecedor['ddd']}} {{$fornecedor['telefone']}}
+				A seguinte declaração traz todos os atributos da estrutura:
+					  @dd($loop)
+
+	ASSETS
+		O termo Assets seria um ativo, relacionado ao tudo que é usado para complementar o conteudo das paginas
+		como por exemplo: Fotos, videos, imagens e até mesmo script CSS ou java scripts
+
+		<div class="logo">
+            <img src="{{asset('img/logo.png')}}">
+        </div>
+
+		No laravel o asset tem como padrão o diretorio public 
+
+		Usando o helper asset é possivel configurar qual o diretorio raiz do Assets 
+		(Caso seja necessario mudar o diretorio não alteraria o caminho até o arquivo, só mudar o assets)
+			
+
+	Com laravel É possivel extender o conteudo html com: 
+		@extends('site.layouts.basico') // chama o layout basico
+		@section('conteudo')
+			conteudo html a ser extendido
+		@endsection 
+
+		Usando o @ include, é possivel incluir componentes comuns nas paginas
+		como por exemplo um menu: 
+			 @include('site.layouts._partials.topo')
+		No caso se esse include for comum em todas as paginas é possivel inclui-lo diretamente no layout 
+		     apartir disso vai ser redenrizado em todas as paginas 
+
+		é possivel tambem separa os elementos comuns entra as paginas html em componentes 
+		chamando comente o component se necessario. 
+		no arquivo blade: 
+			@component('site.layouts._components.form_contato')
+			@endcomponent
+
+		e no arquivo de layout: 
+		 
+
+	Methods POST/ GET
+	   o metodo Get pode ser usado normalmente no form e será enviado para a rota que determinar no arquivo web.php
+
+	   O metodo POST deve ser incluido junto ao metodo @csrf no form, pois por questão de segurança o laravel não envia post sem token
+	        (o metodo @csrf gera um token de autenticação junto ao servidor, isso evita que site malisiosos não façam REQUISIÇÕES ao servidor)
+
+		Além disso para os 2 tipos de verbos html é necessario que declare o metodo na declaração do route
+			Route::get('/contato', 'App\Http\Controllers\ContatoController@contato')->name('site.contato');
+			Route::post('/contato', 'App\Http\Controllers\ContatoController@contato')->name('site.contato');
+
+	Models
+		Models são modelos de objetos que possuem conexão com o banco e reune metodos e atributos. 
+
+	Migrations
+		Migration é um recurso do laravel que te permite programar em scripts a inserçao de colunas e tabela no banco. 
+		É possivel criar um model e uma migration ao mesmo tempo usando o seguinte comando: 	
+				php C:\projetos\laravel\project1\app1\artisan make:model Fornecedor -m
+		O Proprio laravel vai criar um model e um migration. A migration irá ser criada com o metodo up e down, 
+			up -> é executar a ação no banco. 
+			down -> irá fazer a ação reversa. 
+			toda instrução feito no up é ideal que se faça no down. 
+		
+		para criar uma migrate individualmente é só dar o comando:  
+			php C:\projetos\laravel\project1\app1\artisan make:migration alter_ou_create_e_o_nome_da_migration
+			ou php artisan make:migration alter_ou_create_e_o_nome_da_migration
+		
+		para fazer com que a migration seja executada no banco basta dar o comando: 
+			php C:\projetos\laravel\project1\app1\artisan migrate 
+			ou: php artisan migrate 
+				O laravel sempre irá pegar as migrations que ainda não foram executadas. 
+				a intrução de executação sempre ficará na tabela migrations no banco (há a conluna de id da migration, o nome, e a numeração de execução)
+		É possivel fazer então a execução reversa nos arquivos (O Laravel irá executar o metodo down). 
+		Nesse caso o laravel irá executar sempre da ultima migrate executada para a primeira.
+		Para executar o comando reverso basta: 
+			php C:\projetos\laravel\project1\app1\artisan migrate:rollback
+			ou: php artisan migrate:rollback
+				(irá reverter a ultima migrate executada)
+			já o comando: 
+				php C:\projetos\laravel\project1\app1\artisan migrate:rollback --step=2
+				ou: php artisan migrate:rollback --step=2
+				irá reverter o total de migration que for informado no "step"
+		para fazer relações, tanto de 1 para M, de M para 1 oou até de M para M. 
+			no metodo up do migration, deve-se informar a coluna que seria a foreign Key e sua relação: 
+			//constraint
+				$table->foreign('produto_id')->references('id')->on('produtos');
+				$table->unique('produto_id');
+				//o unique define que a relação de produtos com produtos_detalhes é de um para um.
+				// sem o unique é definido que de 1 para N
+			
+			Lenbrando que as colunas que se relacionam sempre deve ser do mesmo tipo. 
+
+		Além disso tudo você pode ter os seguintes comandos: 
+
+			php C:\projetos\laravel\project1\app1\artisan migrate:status 
+			php artisan migrate:status
+				para ser retornado o status de cada migration e sua posição de execução
+
+			php C:\projetos\laravel\project1\app1\artisan migrate:refresh
+			php artisan migrate:refresh
+				O Laravel irá fazer o rollback em todas as migrations e executa-las novamente
+
+			php C:\projetos\laravel\project1\app1\artisan migrate:fresh
+			php artisan migrate:fresh
+				O laravel Vai APGAR TODOS os objetos das migration e executar todas as migration novamente
+
+			php C:\projetos\laravel\project1\app1\artisan migrate:reset  
+			php artisan migrate:reset  
+				 O laravel irá executar todos os rollback
+		
+
+	Metodo Eloquent ORM (Object-relational mapping )
+		(mapeamento de objetos relacional)
+		Basicamente é o a relação entre o objeto e o banco de dados. 
+
+		Existem 2 padrões de ORM:
+			Data Mapper
+			Active Record (Laravel segue esse padrão)
+		
+		Tinker é um console interativo que permite acesso as classes do projeto. 
+			Para abrir: php artisan tinker ou 
+			Atraves do tinker é possivel alterar, instaciar classes, e testar o ORM
+
+			para chamar o tinker: 
+				php artisan tinker
+
+		Chamando o model: 
+			$contato = new \App\Models\siteContato();
+		Atribuindo um valor: 
+			$contato->nome = 'Jorge';
+			$contato->email = 'jean@teste.com';
+			$contato->telefone = '(11) 988888-4444';  
+			$contato->motivo_contato = 1;
+			$contato->mensagem = "Olá, gostatria de mais detalhes sobre o super Gestão";
+
+		Consultando os dados: 
+		 print_r($contato->getAttributes()); 
+
+		Salvando no banco: 
+			 $contato->save();
+
+		O laravel identifica o nome da tabela no banco seguindo os seguintes criterios
+
+			o nome das classes(models) devem seguir o padrão camelCase
+			assim o laravel aplica um underline entre a letra maiuscula 
+
+			por exemplo: 
+				Model: siteContato;
+				tabela: site_contatos;
+
+				observação: o Laravel aplica automaticamente o s
+		
+		Para tabeba em Portugues (como nem sempre ao adicionarmos um S no final a palavra fica no plural) pode dar erro: 
+		   	dado o Erro é possivel definer no model o nome da tabela: 
+		   		protected $table = 'fornecedores';
+			O Laravel levará em consideracao essa definição. 
+
+		é possivel inserir os dados no banco semm chmar a classe: 
+			teremos que definir o atributo $fillble com os atributos na classe (Só defini no arquivo do Model): 
+				protected $fillable = ['nome', 'site', 'uf', 'email']; 
+			e no console tinker executamos: 
+				app/Model/Fornecedor::create([
+					'nome' => 'Fornecedor ABC',
+					'site' => 'fornecedorabc.com.br',
+					'uf' => 'SP',
+					'email' => 'contato@fornecedor.com.br',
+				]);
+				ou (caso não funcione): 
+				use App\Models\Fornecedor;
+
+				Fornecedor::create([
+					'nome' => 'Fornecedor ABC',
+					'site' => 'fornecedorabc.com.br',
+					'uf' => 'SP',
+					'email' => 'contato@fornecedor.com.br',
+				]);
+		isso salvara os dados no banco! 
+
+
+	 	Para selecionar os registro: 
+			use App\Models\Fornecedor;
+			e
+			$fornecedores = Fornecedor::all();
+
+			O Tinker Retornará uma coleção de objetos do tipo Fornecedor
+
+			Para retornar um array só executar: 
+				print_r($fornecedores->toArray())
+				apos executar: 
+				$fornecedores = Fornecedor::all();
+		
+		para consultar os registros no banco é usado o metodo "find();"
+			use App\Models\Fornecedor;
+			$fornecedores2 = Fornecedor::find(2);
+				O tinker retornará os dados do id 2 no banco: 
+			$fornecedores2 = Fornecedor::find([1, 2, 3, 4]);   (desta forma o tinker irá retornar uma collection com os id passados)
+
+		Consultar os registros no banco com condições é usado o "where();"
+			comparadores (operadores logicos): > >= <= <> like 
+
+			Para fazer a consulta: 
+			 $contatos = SiteContato::where('nome_coluna', 'operador_comparacao', 'valor'); 
+			
+			para trazer os dados é essencial que passamos o metodo "get();"
+				$contatos = SiteContato::where('id', '>', 1)->get();
+
+					No caso da comparação de igual não é necessario passar o "=" no parametro o tinker já presume que é uma requisição de comparação. 
+					Ex: $contatos = SiteContato::where('nome', 'maria')->get();
+
+					$contatos = SiteContato::where('mensagem', 'like',  '%detalhes%')->get();
+
+			Usando O whereIn e whereNotIn
+				$contato = SiteContato::whereNotIn('motivo_contato', [1, 3])->get();
+					o tinker retornará todos os obejtos que tiveram o motivo contato 1 ou 3
+			Usando between
+				$contato = SiteContato::whereBetween('id', [3, 6])->get();
+					O tinker retorna tudo que esta entre os id 3 e 6
+				$contato = SiteContato::whereNotBetween('id', [3, 6])->get();
+
+			Where com multiplas condições
+				$contato = SiteContato::where('nome','<>', 'fernando')->whereIn('motivo_contato', [1, 2])->whereBetween('created_at', ['2023-01-31 23:59:59', '2023-12-31 23:59:59'])->get(); 
+
+			Com or: 
+				$contato = SiteContato::where('nome', '<>', 'fernando')->orWhereIn('motivo_contato', [1, 2])->orwhereBetween('created_at',['2023-01-01 00:00:00','2023-12-23:59:59'])->get();
+
+				Se não especificado o or automaticamente o tinker vai fazer o and
+			
+			Com null
+				$contato = SiteContato::whereNull('updated_at')->get(); 
+					Traz todos os registros nos quais estão com a coluna updated_at vazia
+			Com notNull
+				$contato = SiteContato::whereNotNull('updated_at')->get();
+					traz todos os registros nos quais a coluna updated_at não é vazia. 
+
+			Consultando por data: 
+				$contato = SiteContato::whereDate('updated_at', '2023-12-05')->get();
+			Consultando o Dia
+				$contato = SiteContato::whereDay('updated_at', '05')->get(); 
+			Consultando por mes: 
+				 $contato = SiteContato::whereMonth('updated_at', '12')->get();  
+			Consultando por Ano: 
+				$contato = SiteContato::whereYear('updated_at', '2023')->get(); 
+			
+			Consultando pelo tempo (Horario): 
+				$contato = SiteContato::whereTime('updated_at', '=', '08:31:46')->get(); 
+
+			Comparando colunas: 
+				$contato = SiteContato::whereColumn('created_at', 'updated_at')->get();
+					Irá retornar tudo onde a os dados da coluna created_at é igual a updated_at. 
+				$contato = SiteContato::whereColumn('created_at','>',   'updated_at')->get();  
+			
+			Consultas com subgrupos
+				$contato = SiteContato::where(function($query){$query->where('nome', 'jorge')->orwhere('nome', 'ana'); })->where(function($query){$query->whereIn('motivo_contato', [1, 2])->orWhereBetween('id', [4,6]);  })->get(); 
+			
+			Ordenar os dados: 
+				$contato = SiteContato::orderBy('nome', 'asc')->get();   
+					traz todos os dados ordenados pelo nome de forma ascendente
+						O 'asc' é default então o comando pode ser feito da seguinte forma: 
+							$contato = SiteContato::orderBy('nome')->get();  
+				Para descrecente: 
+					 $contato = SiteContato::orderBy('nome', 'desc')->get(); 
+
+
+			Metodos para a collections: 
+				$contato->reverse();  reserte a collection
+				$contato->first(); retorna o primeiro
+				$contato->last(); retorna 
+				SiteContato::all()->toArray();  
+				SiteContato::all()->toJson();
+				SiteContato::all()->pluck('email');   retornar somente a coluna especificada no paramentro
+				SiteContato::all()->pluck('email', 'nome'); retorna uma colection com array onde o nome sera o indice
+
+				na documentação laravel em Digging Deeper>> collection: 
+					https://laravel.com/docs/10.x/collections
+
+			Alterar os atributos:
+				use App\Models\Fornecedor;
+				$fornecedores2 = Fornecedor::find(2);
+
+				pode se usar o "=" para alterar algum atributo: 
+					$fornecedor->nome = 'Fornecedor123';
+				ou você pode usar o fill() para fazer alteração em varios atributos ao mesmo tempo: 
+					$fornecedor2 ->fill(['nome' => 'Fornecedor 789', 'site' => 'Fornecedor789.com.br', 'email' => 'contato@forncedor789.com.br']);
+				
+				Em ambos os metodos deve-se usar o save(); para salvar a alteração no banco: 
+					 $fornecedor2->save();
+			
+			Alterar os tributos direto no banco: 
+				Fornecedor::wherein('id', [1,2])->update(['nome'=> 'Fornecedor Teste', 'site'=> 'teste.com.br']); 
+
+			Para deletar: 
+				Após atribuir os dados a uma variavel, pode executar o metodo delete:
+					$contato ->delete();
+				ou deletar direto no banco: 
+					 SiteContato::where('id', 7)->delete();   
+						ou : 
+						SiteContato::destroy(5); 
+			
+			com o soft delete: 
+				O soft delete é basicamente um bachkup de todas as informações que é inseridas no banco, 
+				Usando uma coluna "deleted_at" ao ser apagada os dados o laravel na realidade registra a data e hora da exclusão. 
+				depois passa a ignorar os registros que obtem valor na coluna "deleted_at"
+
+
+				No model é necessario chamar o namespace:
+					use Illuminate\Database\Eloquent\SoftDeletes;
+				na propria classe chamar SoftDeletes: 
+					use Illuminate\Database\Eloquent\SoftDeletes;
+				Além disso é necessario acrescentar um migration para criar  a coluna do SoftDeletes
+					$table->softDeletes();
+			
+				ao executar o: 
+					$fornecedor->delete(); 
+						O Laravel irá apenas registrar a data e hora da exclusão.
+				Caso seja necessario realmente excluir os dados: 
+					Pode se usar o:
+					$fornecedor->forceDelete(); 
+				Caso seja necessario consultar todos dados com os excluidos: 
+					Fornecedor::withTrashed()->get();
+				ou Somente os excluidos> 
+					Fornecedor::onlyTrashed()->get(); 
+				
+				Para voltar um item excluido com softdelete:
+					$fornecedores = Fornecedor::withTrashed()->get();  
+					$fornecedores[0]->restore(); 
+
+	Seeders
+		Seeders é uma forma que usa-se para incluir dados no banco; 
+		Para fazer um Seed basta dar o comando: 
+			php artisan make:seeder FornecedorSeeder
+		Em database\seeders o artisan vai criar um novo arquivo "FornecedorSeeder"
+			Nesse arquivo podemos definir os atributos do nosso model (Fornecedor) de varias formas: 
+				// Instancianciando objeto 
+					$fornecedor = new Fornecedor();
+
+					$fornecedor-> nome= 'Casa tech';
+					$fornecedor-> site= 'Fornecedor100.com';
+					$fornecedor-> uf = 'ce';
+					$fornecedor-> email= 'Contato@casaTech.com';
+
+					$fornecedor-> save();
+
+						// utilizando o FIll
+					$fornecedor = new Fornecedor();
+						$fornecedor->fill([
+							'nome'  => 'Fornecedor 100',
+							'site'  => 'fornecedor100.com.br',
+							'uf'    => 'CE',
+							'email' => 'contato@fornecedor100.com.br'
+						]);
+						$fornecedor->save();
+
+
+					// Utilizando o metodo Create (é necessario ter o atributo fillble na classe) e a classe extender o Model
+					Fornecedor::create([
+						'nome' => 'Fornecedor 200', 
+						'site' => 'fornedor200.com.br', 
+						'uf' => 'RS', 
+						'email' => 'Contato@fornecedor200.com' 
+					]);
+
+					//Dando insert no banco
+					//necessario chamar o db: 
+					//use Illuminate\Support\Facades\DB;
+					DB::table('fornecedores')->insert([
+						'nome' => 'Fornecedor 300', 
+						'site' => 'fornedor300.com.br', 
+						'uf' => 'SP', 
+						'email' => 'Contato@fornecedor300.com' 
+					]);
+			Atribuido o objeto no arquivo DataBaseSeeder deve ser chamado o Seeder Criado dentro da function run(): 
+				  $this->call(FornecedorSeeder::class);
+			Feito isso dar o comando para inserir os dados no banco: 
+				php artisan db:seed
+					Dado esse comando o php artisan vai executar todos os chamados do arquivo
+						caso seja necessio chamar um seeder especifico:
+							 php artisan db:seed --class=siteContatoSeeder
+
+		
+			Usando factory é possivel adicionar dados com o Metodo fake() da biblioteca FAKER
+				Dê o comando: 
+					php artisan make:factory SiteContatoFactory --model=SiteContato
+				O laravel fara o arquivo "SiteContatoFactory" em database\factories
+				
+				Nesse arquivo deve ser atribuido o metodo fake() e os tipos de dados: 
+					 //Forma de fazer com a versão laravel 10
+						return [
+							'nome' => fake()->name(),
+							'telefone' => fake()->phoneNumber(),
+							'email' => fake()->unique()->safeEmail(),
+							'motivo_contato' => fake()->numberBetween(1, 3), // Número aleatório entre 1 e 3
+							'mensagem' => fake()->text(200),
+						];
+
+						//dessa forma tbm funciona
+						// return [
+						//     'nome' => $this->faker->name(),
+						//     'telefone' => $this->faker->phoneNumber(),
+						//     'email' => $this->faker->unique()->safeEmail(),
+						//     'motivo_contato' => $this->faker->numberBetween(1, 3), // Número aleatório entre 1 e 3
+						//     'mensagem' => $this->faker->text(200),
+						// ];
+			Feito isso agora no arquivo siteContatoSeeder (deve ser criado: php artisan make:seeder siteContatoSeeder ): 
+				  \App\Models\siteContato::factory()->count(100)->create(); 
+				  	//aqui é defino o factory e a  quantidade de dados a ser criado. 
+			
+			No DataBaseSeeder deve ser chamado siteContatoSeeder: 
+				$this->call(siteContatoSeeder::class);
+			Após isso só dar um: 
+				php artisan db:seed --class=siteContatoSeeder
+
+	
+	Formularios: 
+		
+
+				
+
+
+					                                                            
